@@ -1,0 +1,1075 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 							                           
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4,12pt]{article}
+
+%--- Generic packages ---%
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[babel=true]{csquotes}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+%--- Page structure ---%
+
+\usepackage{fancyheadings}
+
+\topmargin -1.5 cm
+\oddsidemargin -0.5 cm
+\evensidemargin -0.5 cm
+\textwidth 17 cm
+\setlength{\headwidth}{\textwidth}
+\textheight 24 cm
+\pagestyle{fancy}
+\lhead[\fancyplain{}{\thepage}]{\fancyplain{}{\sl Rendering Introduction}}
+\chead[\fancyplain{}{{\sl }}]{\fancyplain{}{{Lab Report}}}
+\rhead[\fancyplain{}{}]{\fancyplain{}{Kylian Vincent}}
+\lfoot{\fancyplain{}{}}
+\cfoot{\fancyplain{}{}}
+\cfoot{\thepage }
+\rfoot{\fancyplain{}{}}
+
+%--- Coding zone style ---%
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{listings}             
+\usepackage{textcomp}
+%% For C++ code inclusion
+\usepackage{xcolor}
+
+\lstset{upquote=true,
+	columns=flexible,
+	keepspaces=true,
+	breaklines,
+	breakindent=0pt,
+	alsoletter=\),
+}
+
+\lstset{classoffset=0,
+	keywordstyle=\color{violet!75},
+	deletekeywords={zeros,disp},
+	classoffset=1,
+	keywordstyle=\color{cyan},
+	morekeywords={zeros,disp},
+}
+
+%% For C++ code inclusion
+\lstset { %
+	language=C++,
+	backgroundcolor=\color{black!5}, % set backgroundcolor
+}
+
+\lstset{language=C++,
+	basicstyle=\footnotesize,% basic font setting
+	keywordstyle=\color{blue}\ttfamily,
+	stringstyle=\color{red}\ttfamily,
+	numbers=left, % display line numbers on the left
+	commentstyle=\color{green!60!gray}\ttfamily,
+	showstringspaces=false, % don't mark spaces in strings
+	morecomment=[l][\color{magenta}]{\#}
+}
+\lstset{extendedchars=true,
+	literate={0}{{\color{brown!65!black}0}}1 
+	{1}{{\color{brown!65!black}1}}1 
+	{2}{{\color{brown!65!black}2}}1 
+	{3}{{\color{brown!65!black}3}}1 
+	{4}{{\color{brown!65!black}4}}1 
+	{5}{{\color{brown!65!black}5}}1 
+	{6}{{\color{brown!65!black}6}}1 
+	{7}{{\color{brown!65!black}7}}1 
+	{8}{{\color{brown!65!black}8}}1 
+	{9}{{\color{brown!65!black}9}}1 
+	{(}{{\color{blue!50}(}}1 
+	{)}{{\color{blue!50})}}1 
+	{[}{{\color{blue!50}[}}1 
+	{]}{{\color{blue!50}]}}1
+	{-}{{\color{black}\textbf{-}}}1
+	{+}{{\color{black}\textbf{+}}}1
+	{=}{{\color{black}\textbf{=}}}1
+	{:}{{\color{orange!50!yellow}:}}1
+	{é}{{\'e}}1 
+	{è}{{\`e}}1 
+	{à}{{\`a}}1 
+	{ç}{{\c{c}}}1 
+	{œ}{{\oe}}1 
+	{ù}{{\`u}}1
+	{É}{{\'E}}1 
+	{È}{{\`E}}1 
+	{À}{{\`A}}1 
+	{Ç}{{\c{C}}}1 
+	{Œ}{{\OE}}1 
+	{Ê}{{\^E}}1
+	{ê}{{\^e}}1 
+	{î}{{\^i}}1 
+	{ô}{{\^o}}1 
+	{û}{{\^u}}1 
+}
+
+
+%--- Math shortcuts ---%
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\A}{\mathbf{A}}
+\newcommand{\B}{\mathbf{B}}
+\newcommand{\C}{\mathbf{C}}
+\newcommand{\D}{\mathbf{D}}
+\newcommand{\ub}{\mathbf{u}}
+
+%--- Correction ---%
+
+\usepackage{framed}
+\usepackage{ifthen}
+\usepackage{comment}
+\usepackage{graphicx}
+
+\newcounter{Nbquestion}
+
+\newcommand*\question{%
+	\stepcounter{Nbquestion}%
+	\textbf{Question \theNbquestion. }}
+
+\definecolor{shadecolor}{gray}{0.80}
+
+%--- Questions style ---%
+
+\mdfsetup{leftmargin=12pt}
+\mdfsetup{skipabove=\topskip,skipbelow=\topskip}
+
+\tikzset{
+	warningsymbol/.style={
+		rectangle,draw=red,
+		fill=white,scale=1,
+		overlay}}
+\global\mdfdefinestyle{exampledefault}{
+	hidealllines=true,leftline=true,
+	innerrightmargin=0.0em,
+	innerleftmargin=0.3em,
+	leftmargin=0.0em,
+	linecolor=red,
+	backgroundcolor=orange!20,
+	middlelinewidth=4pt,
+	innertopmargin=\topskip,
+}
+
+\global\mdfdefinestyle{answer}{
+	hidealllines=true,leftline=true,
+	innerrightmargin=0.0em,
+	innerleftmargin=0.3em,
+	leftmargin=0.0em,
+	linecolor=green,
+	backgroundcolor=white,
+	middlelinewidth=4pt,
+	innertopmargin=\topskip,
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 							               HEADING       
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\textbf{Rendering Introduction\\Lab report}}
+\author{
+	\begin{tabular}{c}
+		\textsc{Kylian Vincent}\\
+	\end{tabular}}   
+\date{\small \today}
+
+\makeatletter
+\def\thetitle{\@title}
+\def\theauthor{\@author}
+\def\thedate{\@date}
+\makeatother 
+
+\usepackage{etoolbox}
+\usepackage{titling}
+\setlength{\droptitle}{-7em}
+
+\setlength{\parindent}{1cm}
+
+\makeatletter
+% bug patch about closing parenthesis from http://tex.stackexchange.com/q/69472
+\patchcmd{\lsthk@SelectCharTable}{%
+	\lst@ifbreaklines\lst@Def{`)}{\lst@breakProcessOther)}\fi}{}{}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 							DOCUMENT          
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+	\maketitle
+
+	\tableofcontents
+	\pagebreak
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 						                  	PART 1
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Worksheet 1}
+	
+	\subsection{Preview}
+	\begin{center}
+		\includegraphics[width = 12cm]{./Worksheet1/Worksheet1_GettingStarted_Cropped.png}
+	\end{center}
+	
+	\subsection{Rays generation}
+	\textbf{RenderEngine.cpp}
+	\begin{lstlisting}
+		void RenderEngine::render()
+		{
+		cout << "Raytracing";
+		Timer timer;
+		timer.start();
+		#pragma omp parallel for private(randomizer)
+		for(int y = 0; y < static_cast<int>(res.y); ++y)
+		{
+			// Inner loop which runs through each pixel in a row and
+			// stores the result of calling compute_pixel in the image array.
+			for(int x = 0; x < static_cast<int>(res.x); x++)
+			{
+				image.at(y*res.y+x) = tracer.compute_pixel(x, y);
+			}
+		
+			if(((y + 1) % 50) == 0) 
+				cerr << ".";
+			}
+			timer.stop();
+			cout << " - " << timer.get_time() << " secs " << endl;
+		
+			init_texture();
+			done = true;
+		}
+	\end{lstlisting}
+	
+	\textbf{RayCaster.cpp}
+	\begin{lstlisting}
+		float3 RayCaster::compute_pixel(unsigned int x, unsigned int y) const
+		{
+			// Use the scene and its camera
+			// to cast a ray that computes the color of the pixel at index (x, y).
+			//
+			// Input:  x, y        (pixel index)
+			//
+			// Return: Result of tracing a ray through the pixel at index (x, y)
+			
+			
+			float3 result = make_float3(0.0f);
+						
+			float xip = x*win_to_ip.x + lower_left.x;
+			float yip = y*win_to_ip.y + lower_left.y;
+			float2 coords = make_float2(xip, yip);
+			
+			Ray r = scene->get_camera()->get_ray(coords);
+			
+			HitInfo hit = HitInfo();
+			scene->closest_hit(r, hit);
+			
+			if (hit.has_hit) {
+				result = get_shader(hit)->shade(r, hit);
+			} else {
+			result = get_background();
+		}
+		// Uncomment the following line to output a color using the ray direction 
+		//return (r.direction + 1)/2;
+		
+		return result;
+	}
+	\end{lstlisting}
+	
+	\textbf{Camera.cpp}
+	\begin{lstlisting}
+	void Camera::set(const float3& eye_point, const float3& view_point, const float3& up_vector, float camera_constant)
+	{
+		// Compute camera coordinate frame (image plane normal and basis).
+		eye = eye_point;
+		lookat = view_point;
+		up = up_vector;
+		cam_const = camera_constant;
+		
+		ip_normal = normalize(lookat - eye);
+		ip_xaxis = normalize(cross(ip_normal, up));
+		ip_yaxis = cross(ip_xaxis, ip_normal);
+		
+		float film_height = 1;
+		fov = 2*atan(film_height/(2*camera_constant)); //In radians
+		fov *= 180*M_1_PIf; //In degrees
+		//fov = 53.13f;
+	}
+	\end{lstlisting}
+	
+	\begin{lstlisting}
+	/// Get direction of viewing ray from image coords.
+	float3 Camera::get_ray_dir(const float2& coords) const
+	{
+		return normalize(ip_xaxis*coords.x + ip_yaxis*coords.y + ip_normal*cam_const);
+	}
+	\end{lstlisting}
+	
+	\begin{lstlisting}
+	/// Return the ray corresponding to a set of image coords
+	Ray Camera::get_ray(const float2& coords) const
+	{
+		return Ray(eye, get_ray_dir(coords), 0, 0);
+	}
+	\end{lstlisting}
+	
+	Below is a result of the output color computed using the ray directions :
+	\begin{center}
+		\includegraphics[width =10cm]{./Worksheet1/ray_colors.png}
+	\end{center}
+	
+	\subsection{Intersections}
+	\textbf{Accelerator.cpp}
+	\begin{lstlisting}
+	bool Accelerator::closest_hit(optix::Ray& r, HitInfo& hit) const
+	{
+		// Loop through all the primitives to find the closest intersection (if any).
+		closest_plane(r, hit);
+		
+		for (uint i = 0; i < primitives.size(); i++) {
+			AccObj* obj = primitives[i];
+			if (obj->geometry->intersect(r, hit, obj->prim_idx)) {
+				r.tmax = hit.dist;
+			}
+		}
+		
+		return hit.has_hit;
+	}
+	\end{lstlisting}
+	
+	\textbf{Plane.cpp}
+	\begin{lstlisting}
+	bool Plane::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
+	{
+		// Ray-plane intersection
+		// Test if the plane intersects
+		if (dot(r.direction, onb.m_normal) == 0) {
+			// No intersection
+			return false;
+		}
+		
+		float dist = -(dot(r.origin, onb.m_normal) + d) / (dot(r.direction, onb.m_normal));
+		
+		// Check if t is in bounds
+		if (dist < r.tmin) {
+			return false;
+		} else if (dist > r.tmax) {
+			return false;
+		}
+	
+		// Intersects with the plane, setting hit properties
+		hit.has_hit = true;
+		hit.dist = dist;
+		hit.position = r.origin + r.direction*dist;
+		hit.geometric_normal = onb.m_normal;
+		hit.shading_normal = onb.m_normal;
+		hit.material = &material;
+		
+		return true;
+	}
+	\end{lstlisting}
+	
+	\textbf{Triangle.cpp}
+	\begin{lstlisting}
+	bool intersect_triangle(const Ray& ray,
+	const float3& v0,
+	const float3& v1,
+	const float3& v2,
+	float3& n,
+	float& t,
+	float& v,
+	float& w)
+	{		
+		// Test intersection with containing plane first
+		float3 e0 = (v1 - v0);
+		float3 e1 = (v0 - v2);
+		n = cross(e0, e1);
+		if (dot(ray.direction, n) == 0) {
+			// No intersection
+			return false;
+		}
+		
+		float3 v0_minus_o = v0 - ray.origin;
+		float denom = dot(ray.direction, n);
+		t = dot(v0_minus_o, n) / denom;
+		
+		// Check if t is in bounds
+		if (t < ray.tmin) {
+			return false;
+		} else if (t > ray.tmax) {
+			return false;
+		}
+		
+		// Vector decomposition
+		float3 num_denom = cross(v0_minus_o, ray.direction)/denom;
+		v = dot(num_denom, e1);
+		w = dot(num_denom, e0);
+		
+		n = -n;
+		return (v >= 0 && w >= 0 && v + w <= 1);
+	}
+	
+	
+	bool Triangle::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
+	{
+		// Ray-triangle intersection
+		float dist, v, w;
+		float3 normal;
+		bool intersects = ::intersect_triangle(r, v0, v1, v2, normal, dist, v, w);
+		
+		if (intersects) {
+			hit.has_hit = true;
+			hit.dist = dist;
+			hit.position = r.origin + r.direction*dist;
+			hit.geometric_normal = normalize(normal);
+			hit.shading_normal = hit.geometric_normal;
+			hit.material = &material;
+		}
+		
+		return intersects;
+	}
+	\end{lstlisting}
+	
+	\textbf{Sphere.cpp}
+	\begin{lstlisting}
+	bool Sphere::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
+	{
+		float3 ray_to_sphere = r.origin - center;
+		float b_half = dot(ray_to_sphere, r.direction);
+		float c = dot(ray_to_sphere, ray_to_sphere) - pow(radius, 2);
+		
+		float discrim = pow(b_half, 2) - c;
+		
+		if (discrim < 0) {
+			return false;
+		}
+		float t1 = -b_half - sqrt(discrim);
+		float t2 = -b_half + sqrt(discrim);
+		float dist;
+		if (t1 > r.tmin && t1 < r.tmax) {
+			dist = t1;
+		} else if (t2 > r.tmin && t2 < r.tmax) {
+			dist = t2;
+		} else {
+			// None of the distances are in bounds: no intersection
+			return false;
+		}
+		
+		hit.has_hit = true;
+		hit.dist = dist;
+		hit.position = r.origin + r.direction*dist;
+		hit.geometric_normal = normalize(hit.position - center);
+		hit.shading_normal = hit.geometric_normal;
+		hit.material = &material;
+		
+		return true;
+	}
+	\end{lstlisting}
+	\begin{center}
+	\begin{minipage}[b]{0.40\linewidth}
+		\begin{center}
+			\includegraphics[width =\textwidth]{./Worksheet1/blue_closest_hit.png}\\
+			\textit{No intersection implemented : only blue background}
+		\end{center}
+	\end{minipage}
+	\hspace{0.05\linewidth}
+	\begin{minipage}[b]{0.40\linewidth}
+		\begin{center}
+			\includegraphics[width =\textwidth]{./Worksheet1/intersection.png}\\
+			\textit{Every intersection implemented : identical to preview}
+		\end{center}
+	\end{minipage}
+	\end{center}
+
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 						                  	PART 2
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Worksheet 2}
+	
+	\subsection{Shading of diffuse objects}
+	\textbf{PointLight.cpp}
+	\begin{lstlisting}
+	bool PointLight::sample(const float3& pos, float3& dir, float3& L) const
+	{
+		if (!shadows) {
+		return true;
+		}
+		
+		// Test if there's a hit before the object
+		dir = light_pos - pos;
+		float dist = length(dir);
+		dir = normalize(dir);
+		
+		// Light fading
+		L = intensity/(pow(dist, 2));
+		
+		Ray shadow_ray = Ray(light_pos, -dir, 0, 0, dist - 1e-4);
+		HitInfo hit;
+		
+		return !tracer->trace_to_any(shadow_ray, hit);
+	}
+	\end{lstlisting}
+	
+	\begin{center}
+		\includegraphics[width =8cm]{./Worksheet2/hard_shadows.png}\\
+		\textit{Hard shadows}
+	\end{center}
+	
+	The computation of the ray-triangle intersection is done with an inverted normal for the triangle (the triangle is facing down). In order to display correctly the triangle color its normal has to be inverted.
+	
+	\subsection{Reflection and refraction}
+	\textbf{RayTracer.cpp}
+	\begin{lstlisting}
+	bool RayTracer::trace_reflected(const Ray& in, const HitInfo& in_hit, Ray& out, HitInfo& out_hit) const
+	{
+		out.direction = optix::reflect(in.direction, in_hit.shading_normal);
+		out.origin = in_hit.position;
+		out.ray_type = 0;
+		out.tmax = RT_DEFAULT_MAX;
+		out.tmin = 1.0e-4f;
+		
+		out_hit.ray_ior = in_hit.ray_ior;
+		out_hit.trace_depth = in_hit.trace_depth + 1;
+		
+		return trace_to_closest(out, out_hit);
+	}
+	\end{lstlisting}
+	
+	\begin{lstlisting}
+	bool RayTracer::trace_refracted(const Ray& in, const HitInfo& in_hit, Ray& out, HitInfo& out_hit) const {
+		float3 normal;
+		float cos_theta_in;
+		out_hit.ray_ior = get_ior_out(in, in_hit, out.direction, normal, cos_theta_in);
+		out_hit.trace_depth = in_hit.trace_depth + 1;
+		
+		bool is_refracted = optix::refract(out.direction, in.direction, normal, out_hit.ray_ior/in_hit.ray_ior);
+		if (!is_refracted) {
+			// Fully reflected so we call the reflexion for the refractive part
+			return trace_reflected(in, in_hit, out, out_hit);
+		}
+		
+		out.origin = in_hit.position;
+		out.ray_type = 0;
+		out.tmax = RT_DEFAULT_MAX;
+		out.tmin = 1.0e-4f;
+		
+		return trace_to_closest(out, out_hit);
+	}
+	\end{lstlisting}
+	
+	The function \textit{get\_ior\_out} eases finding the index of refraction of the outside material (explanation of the function in comments):
+	\begin{lstlisting}
+	float RayTracer::get_ior_out(const Ray& in, const HitInfo& in_hit, float3& dir, float3& normal, float& cos_theta_in) const
+	{
+		// Get the refractive index of the material is which the ray is entering by refraction, only support interfaces
+		// air/material or material/air.
+		// If getting out of a material (detected because the normal is pointing to the outside) the refractive index is
+		// automatically set to 1.0f
+		// Sets normal and cos_theta_in according to the ray and hit_info
+		normal = in_hit.shading_normal;
+		dir = -in.direction;
+		cos_theta_in = dot(normal, dir);
+		if(cos_theta_in < 0.0)
+		{
+			normal = -normal;
+			cos_theta_in = -cos_theta_in;
+			return 1.0f;
+		}
+		const ObjMaterial* m = in_hit.material;
+		return m ? m->ior : 1.0f;
+	}
+	\end{lstlisting}
+	
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet2/mirror_ball.png}\\
+				\textit{Mirror material : 100\% reflection\vspace{1em}}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet2/transparent_ball.png}\\
+				\textit{Transparent material : 90\% refraction, \%10 reflection}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	For the mirror-material rendering i'm not sure of the output, it seems like a lot of refraction more than transparency, should it be that way or did I make a mistake ?
+	
+	\subsection{Adding the corrected Phong Model}
+	In order to obtain the glossy material we have to include Phong Model computation to add specular and diffuse characteristics to objects.
+	
+	\textbf{Phong.cpp}
+	
+	\begin{lstlisting}
+	float3 Phong::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		float3 rho_d = get_diffuse(hit);
+		float3 rho_s = get_specular(hit);
+		float s = get_shininess(hit);
+		float3 wi, wo, wr, Li;
+		float3 Lr = make_float3(0.0);
+		
+		for (int i = 0; i < lights.size(); i++) {
+			Light *light = lights[i];
+			if (light->sample(hit.position, wi, Li)) {
+				// Not in shadows, we add this light participation
+				wr = normalize(reflect(-wi, hit.shading_normal));
+				wo = normalize(-r.direction);
+				
+				// Compute phong for this light
+				Li = make_float3(fmax(dot(wi, hit.shading_normal), 0));
+				
+				float3 first_coeff = rho_d*M_1_PIf;
+				float dotproduct = dot(wo, wr);
+				dotproduct = fmax(dotproduct, 0);
+				float3 second_coeff = rho_s*(s + 2)*pow(dotproduct, s)*M_1_PIf/2;
+				
+				Li *= (first_coeff + second_coeff);
+				Lr += Li;
+			}
+		}
+		return Lr + Lambertian::shade(r, hit, emit);
+	}
+	\end{lstlisting}
+	
+	\textbf{Glossy.cpp}
+	\begin{lstlisting}
+	float3 Glossy::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		if(hit.trace_depth >= max_depth)
+			return make_float3(0.0f);
+		
+		float R;
+		Ray reflected, refracted;
+		HitInfo hit_reflected, hit_refracted;
+		tracer->trace_reflected(r, hit, reflected, hit_reflected);
+		tracer->trace_refracted(r, hit, refracted, hit_refracted, R);
+		
+		return R*shade_new_ray(reflected, hit_reflected) + (1.0f - R)*shade_new_ray(refracted, hit_refracted) + Phong::shade(r, hit, emit);
+	}
+	\end{lstlisting}
+	
+	The Glossy shader creates a reflected ans refracted ray and mix their results according to the coefficient R between more reflection or refraction (linear combination). A Phong model component is added to render the specular and diffusive aspect of the material.\\
+	
+	Thus we see the light reflexion on the ball :
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet2/phong_cor.png}\\
+				\textit{Phong Model with specular and diffuse components}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet2/glossy_cor.png}\\
+				\textit{Glossy material : Transparent material with Phong Model}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 						                  	PART 3
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Worksheet 3}
+	\subsection{Textures in the framework}
+	In \textbf{RenderEngine.cpp} the texture file for the plane is loaded using this code in \textit{load\_files} : 
+	\begin{lstlisting}
+	 // Insert default scene
+	 scene.add_plane(make_float3(0.0f, 0.0f, 0.0f), make_float3(0.0f, 1.0f, 0.0f), "../models/default_scene.mtl", 1, 0.2f); // last argument is texture scale
+	 scene.add_sphere(make_float3(0.0f, 0.5f, 0.0f), 0.3f, "../models/default_scene.mtl", 2);
+	 scene.add_triangle(make_float3(-0.2f, 0.1f, 0.9f), make_float3(0.2f, 0.1f, 0.9f), make_float3(-0.2f, 0.1f, -0.1f), "../models/default_scene.mtl", 3);
+	 scene.add_light(new PointLight(&tracer, make_float3(M_PIf), make_float3(0.0f, 1.0f, 0.0f)));
+	 cam.set(make_float3(2.0f, 1.5f, 2.0f), make_float3(0.0f, 0.5, 0.0f), make_float3(0.0f, 1.0f, 0.0f), 1.0f);
+	\end{lstlisting}
+	
+	The file \textit{default\_scene.mtl} contains rendering constants and the filename of the texture to load.\\
+		
+		
+	By looking at the file \textbf{Textured.cpp} we can see how the color are retrieved from the texture. The objects have two components, a diffuse and ambient (embedded in emission) component. For objects these two components are computed respectively by functions \textit{get\_diffuse} and \textit{get\_emission}.\\
+	
+	For the textured objects it's a bit different as the color has to take into account the texture color within the environment and object properties. To do so, the texture diffuse term is defined as the texture color (linearly interpolated from the texture using the hit coordinates). The emission term is a combination between ambient material properties, diffuse material properties and texture color interpolated.
+	
+	
+%	In a rendering texture color are mapped onto a surface and then each rendered pixel find its corresponding value in the texture. This mapping can be either linear (\textit{sample\_linear}) or based on the nearest texel (\textit{sample\_nearest}). Then the color is retrieved from the texture image using the \textit{look\_up} function which load the corresponding color depending on the number of channels in the image (Grey levels, grey levels and transparency, RGB, RGB and transparency) :
+%	
+%	\begin{lstlisting}
+%	float4 Texture::look_up(unsigned int idx) const
+%	{
+%		idx *= channels;
+%		switch(channels)
+%		{
+%			case 1: 
+%			{
+%				float v = convert(data[idx]);
+%				return make_float4(v, v, v, 1.0f);
+%			}
+%			case 2: 
+%			return make_float4(convert(data[idx]), convert(data[idx]), convert(data[idx]), convert(data[idx + 1]));
+%			case 3: 
+%			return make_float4(convert(data[idx]), convert(data[idx + 1]), convert(data[idx + 2]), 1.0f);
+%			case 4: 
+%			return make_float4(convert(data[idx]), convert(data[idx + 1]), convert(data[idx + 2]), convert(data[idx + 3]));
+%		}
+%		return make_float4(0.0f);
+%	}
+%	\end{lstlisting}
+	
+	
+	
+	\subsection{Textures coordinates on a plane}
+	\textbf{Plane.cpp}
+	\begin{lstlisting}
+	void Plane::get_uv(const float3& hit_pos, float& u, float& v) const
+	{
+		// Do an inverse mapping from hit position to texture coordinates.
+		u = dot((hit_pos - position), onb.m_tangent) * tex_scale;
+		v = dot((hit_pos - position), onb.m_binormal) * tex_scale;
+	}
+	\end{lstlisting}
+	 In the function \textit{intersect} I added just before the return statement a test to set the texture coordinates :
+	 \begin{lstlisting}
+	 // Test for texture
+	 if (material.has_texture) {
+	 	get_uv(hit.position, hit.texcoord.x, hit.texcoord.y);
+	 }
+	 \end{lstlisting}
+	 
+	 We obtain the grass textures mapped on the plane and we can change this texture by a tileable one of our choice by changing the filename in the \textit{default\_scene.mtl} file :
+	 \begin{center}
+	 \begin{minipage}[b]{0.40\linewidth}
+		 \begin{center}
+		 	\includegraphics[width = \textwidth]{./Worksheet3/ScreenshotPreviewTexture.png}\\
+		 	\textit{Preview of the grass texture}\\
+		 	\hspace{1em}
+		 \end{center}
+	\end{minipage}
+	\hspace{0.05\linewidth}
+	\begin{minipage}[b]{0.40\linewidth}
+		\begin{center}
+			\includegraphics[width =\textwidth]{./Worksheet3/PavementPreview.png}\\
+			\textit{Preview of a texture of a tileable pavement}
+		\end{center}
+	\end{minipage}
+	\end{center}
+	
+	\subsection{Texture Lookup}
+	\textbf{Texture.cpp}
+	\begin{lstlisting}
+	float4 Texture::sample_nearest(const float3& texcoord) const
+	{
+		if(!fdata)
+		return make_float4(0.0f);
+		
+		double s, t, a, b;
+		int U, V;
+		s = texcoord.x - floor(texcoord.x);
+		t = texcoord.y - floor(texcoord.y);
+		// We revert vertical axis
+		t = 1 - t;
+		a = s * width;
+		b = t * height;
+		U = (int)(a + 0.5) % width;
+		V = (int)(b + 0.5) % height;
+		// We revert the vertical axis
+		return fdata[U + V*width];
+		//    return make_float4(0.0f);
+	}
+	\end{lstlisting}
+	
+	With this nearest texel computation we obtain the following results :
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet3/TexturesRenderingFlat.png}\\
+				\textit{Rendering using base colours}\\
+				\hspace{1em}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet3/TexturesRenderingShadows.png}\\
+				\textit{Rendering using the Lambertian Shader}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	With the Lambertian shader we can then adapt the gamma to make the scene brighter :
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet3/TexturesRenderingShadowsGamma.png}\\
+				\textit{Lambertian rendering with gamma increased once}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet3/TexturesRenderingShadowsGammaGamma.png}\\
+				\textit{Lambertian rendering with gamma increased twice (too much correction)}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	Bilinear implementation :
+	\begin{lstlisting}
+	float4 Texture::sample_linear(const float3& texcoord) const
+	{
+	if(!fdata)
+	return make_float4(0.0f);
+	
+	double s, t, a, b;
+	int U, V;
+	s = texcoord.x - floor(texcoord.x);
+	t = texcoord.y - floor(texcoord.y);
+	// We revert vertical axis
+	t = 1 - t;
+	a = s * width;
+	b = t * height;
+	U = (int)a;
+	V = (int)b;
+	
+	float4 i_a, i_b, i_c, i_d;
+	// We need a modulo when taking the U+1 or V+1 coordinate to make sure
+	// we're not going outside the texture image
+	i_a = fdata[U + V*width];
+	i_b = fdata[(U+1)%height + V*width];
+	i_c = fdata[U + ((V+1)%width)*width];
+	i_d = fdata[(U+1)%height + ((V+1)%width)*width];
+	
+	return bilerp(i_a, i_b, i_c, i_d, a - U, b - V);
+	}
+	\end{lstlisting}
+	
+	Scaling the texture is done using the last argument of function \textbf{Scene}.\textit{add\_plane}. When this factor is lowered, then as the coordinates are scaled with this factor, the texture is magnified (larger).
+	Scaling the textures with a too low scaling factor lead to magnification at the bottom part of our image. Indeed the texture image will cover a really wide unitary texture area and a texel will cover multiple pixels. The inverse phenomena produces aliasing in the far part of the plane.\\
+	
+	Here is an example of magnification when the texture image scaling factor is too low:
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet3/MagnifRenduNearest.png}\\
+				\textit{Nearest sampling with a scaling factor divided by 10 (0.02 instead of 0.2)\\\vspace{1em}}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet3/MagnifRenduInterpo.png}\\
+				\textit{Linear sampling (interpolation) with a scaling factor divided by 10 (0.02 instead of 0.2)}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	With the nearest sampling we can clearly distinguish the same texels covering multiple pixels, this implies big squares of the same color and a big discontinuity in between. This problem is diminished with the interpolation implementation as pixel values are interpolated between texel values, thus the resulting image is smoothed.
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 						                  	PART 4
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Worksheet 4}
+	\subsection{Cornell box and blocks}
+	Loading the Cornell box and blocks using the command line \textit{./raytraced ../models/CornellBox.obj ../models/CornellBlocks.obj} leads to the following base colour preview:
+	\begin{center}
+		\includegraphics[width=8cm]{./Worksheet4/CornellBasePreview}\\
+		\textit{Cornell box and blocks preview}
+	\end{center}
+	
+	After implementing the \textit{intersect} function in \textbf{TriMesh.cpp} the render result is the same as preview:
+	\begin{lstlisting}
+	bool TriMesh::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
+	{
+		const uint3& face = geometry.face(prim_idx);
+		
+		float3 v0 = geometry.vertex(face.x);
+		float3 v1 = geometry.vertex(face.y);
+		float3 v2 = geometry.vertex(face.z);
+		float3 normal;
+		float dist, v ,w;
+
+		bool intersects = ::intersect_triangle(r, v0, v1, v2, normal, dist, v, w);
+		
+		if (intersects) {
+			hit.has_hit = true;
+			hit.dist = dist;
+			hit.geometric_normal = normalize(normal);
+			// Set the shading normal to geometric normal for now
+			hit.shading_normal = hit.geometric_normal;
+			
+			hit.material = &(materials[mat_idx[prim_idx]]);
+		}
+		return intersects;
+	}
+	\end{lstlisting}
+	
+	\begin{center}
+		\includegraphics[width=8cm]{./Worksheet4/cornellblocks_flat.png}\\
+		\textit{Cornell box and blocks rendering with default directional light}
+	\end{center}
+	
+	To display the Cornell scene we implement the area light in \textbf{AreaLight.cpp}:
+	
+	\begin{lstlisting}
+	bool AreaLight::sample(const float3& pos, float3& dir, float3& L) const
+	{
+		const IndexedFaceSet& normals = mesh->normals;
+		L = make_float3(0.0f);
+		
+		float3 center = mesh->compute_bbox().center();
+		dir = center - pos;
+		float dist = length(dir);
+		dir = normalize(dir);
+		float3 intensity_sum = make_float3(0.0f);
+		
+		// Test if in shadows with shadow ray
+		Ray shadow_ray = Ray(center, -dir, 0, 1e-4, dist - 1e-4);
+		HitInfo hit;
+		if (shadows & tracer->trace_to_any(shadow_ray, hit)) {
+			// return false with L still equal to zero
+			return false;
+		}
+		
+		// Not in shadows
+		// For each triangle in the mesh
+		for (int i = 0; i < mesh->geometry.no_faces(); i++) {
+			uint3 face = normals.face(i);
+			float3 normal_mean = normalize(normals.vertex(face.x) + normals.vertex(face.y) + normals.vertex(face.z));
+			intensity_sum += -dot(dir, normal_mean) * mesh->face_areas[i] * get_emission(i);
+		}
+		
+		// Fr and dot product handled by Lambertian
+		L = intensity_sum/pow(dist, 2);
+		
+		return true;
+	}
+	\end{lstlisting}
+	
+	
+	Then we can compare the preview with rendered scene:
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet4/preview_cornell_area.png}\\
+				\textit{Preview of the Cornell scene with area light}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet4/cornellblocks.png}\\
+				\textit{Rendering of the Cornell scene with area light (Not working yet)}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	For the Utah teapot, the \textit{Directional Light} is needed:
+	\textbf{Directional.cpp}
+	
+	\begin{lstlisting}
+	bool Directional::sample(const float3& pos, float3& dir, float3& L) const
+	{
+		dir = -light_dir;
+		L = make_float3(0.0f);
+		
+		Ray shadowRay(pos, dir, 0, 1e-4, 10.0f);
+		HitInfo hit;
+		if (shadows & tracer->trace_to_any(shadowRay, hit)){
+			// return with L = 0.0f
+			return false;
+		}
+		
+		// Fr and dot product handled by Lambertian
+		L = emission;
+		
+		return true;
+	}
+	\end{lstlisting}
+	
+	We then can render the teapot, as the mesh is big and we don't have space subdivision the rendering is longer and takes approximately 300s. We can see that the rendering is not smooth and we can see each square composing the mesh, to make it smooth we can compute the normals along the faces using the barycentric coordinates in \textbf{TriMesh.cpp}:
+	
+	\begin{lstlisting}
+	bool TriMesh::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
+	{
+		const uint3& face = geometry.face(prim_idx);
+		
+		float3 v0 = geometry.vertex(face.x);
+		float3 v1 = geometry.vertex(face.y);
+		float3 v2 = geometry.vertex(face.z);
+		float3 normal;
+		float dist, v ,w;
+		
+		bool intersects = ::intersect_triangle(r, v0, v1, v2, normal, dist, v, w);
+		
+		if (intersects) {
+			hit.has_hit = true;
+			hit.dist = dist;
+			hit.geometric_normal = normalize(normal);
+			
+			if (has_normals()) {
+				uint3 normals_idx = normals.face(prim_idx);
+				float3 n1 = normals.vertex(normals_idx.x);
+				float3 n2 = normals.vertex(normals_idx.y);
+				float3 n3 = normals.vertex(normals_idx.z);
+				float3 interp_normal = normalize((1-v-w)*n1 + v*n2 + w*n3);
+				hit.shading_normal = interp_normal;
+			} else {
+				hit.shading_normal = hit.geometric_normal;
+			}
+			
+			hit.material = &(materials[mat_idx[prim_idx]]);
+		}
+		return intersects;
+	}
+	\end{lstlisting}
+	
+	We obtain the following renderings:
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet4/teapot_raw.png}\\
+				\textit{Teapot rendering using face normals
+					\vspace{2.2em}}\\
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width =\textwidth]{./Worksheet4/teapot_smooth.png}\\
+				\textit{Teapot rendering using normals barycentric interpolation across triangles}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	\subsection{BSP Tree}
+	The naive intersection method consists in testing intersection with all rays, this is very costly, especially if the number of triangles in the mesh is very high. A lot of intersection tests are made with triangles which are far away from our ray.\\
+	
+	In order to improve this intersection algorithm we use a recursive intersection method involving a \textit{BSP tree}. This BSP tree is first constructed iteratively with the object bounding box as the root and then subdivide this bounding box along an axis-aligned plane, to create two children with smaller (and adjusted to smaller parts of the object) bounding boxes. When we reach a certain criteria (size of bounding boxes, number of primitives inside a leaf bounding box..) we stop the tree growth.\\
+	
+	A hard point is to find the best subdivision plane in order to chose the more efficient subdivision regarding the size of the produced children bounding boxes and the primitives inside each. To optimize it without being too costly, we compute some different subdivisions and choose the one with the minimal cost($= \sum number\_of\_primitives\_inside\_bounding\_box*size\_of\_bounding\_box$).\\
+	
+	Once this structure is constructed, testing intersection is then an easy recursive search. Starting from the root, if the ray intersect the bounding\_box of the considered node (\textit{intersect\_node} function), we test if it intersects its children, if it intersects one then we recursively call the \textit{interest\_node} on this node and so on. When we reach a tree leaf, we just have to test the intersection as we did before with the primitives in this leaf. Due to tree construction the number of primitives in each leaf should be really low and then we only compute a small number of ray-primitive intersections regarding the old naive method without altering the rendered result.\\
+	
+	To use this structure in our program we have to modify the \textit{closest\_hit} and \textit{any\_hit} functions in the file \textbf{BspTree.cpp}:\\
+	
+	
+	\textit{Not finished yet}
+	
+	
+\end{document}
+
+% Fin du document LaTeX
