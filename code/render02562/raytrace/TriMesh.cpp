@@ -29,6 +29,7 @@ bool TriMesh::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
     //
     // Output: hit.has_hit          (set true if the ray intersects the triangle)
     //         hit.dist             (distance from the ray origin to the intersection point)
+    //         hit.position         (coordinates of the intersection point)
     //         hit.geometric_normal (the normalized normal of the triangle)
     //         hit.shading_normal   (the normalized normal of the triangle)
     //         hit.material         (pointer to the material of the triangle)
@@ -77,6 +78,7 @@ bool TriMesh::intersect(const Ray& r, HitInfo& hit, unsigned int prim_idx) const
         }
 
         hit.material = &(materials[mat_idx[prim_idx]]);
+        hit.position = r.origin + r.direction*dist;
     }
     return intersects;
 }

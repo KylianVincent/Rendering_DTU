@@ -911,6 +911,7 @@
 			// Set the shading normal to geometric normal for now
 			hit.shading_normal = hit.geometric_normal;
 			
+			hit.position = r.origin + r.direction*dist;
 			hit.material = &(materials[mat_idx[prim_idx]]);
 		}
 		return intersects;
@@ -934,7 +935,6 @@
 		dir = center - pos;
 		float dist = length(dir);
 		dir = normalize(dir);
-		float3 intensity_sum = make_float3(0.0f);
 		
 		// Test if in shadows with shadow ray
 		Ray shadow_ray = Ray(center, -dir, 0, 1e-4, dist - 1e-4);
@@ -946,14 +946,16 @@
 		
 		// Not in shadows
 		// For each triangle in the mesh
-		for (int i = 0; i < mesh->geometry.no_faces(); i++) {
+		for (int i = 0; i < mesh->normals.no_faces(); i++) {
 			uint3 face = normals.face(i);
 			float3 normal_mean = normalize(normals.vertex(face.x) + normals.vertex(face.y) + normals.vertex(face.z));
-			intensity_sum += -dot(dir, normal_mean) * mesh->face_areas[i] * get_emission(i);
+			double dotProduct = -dot(dir, normal_mean);
+			dotProduct = fmax(dotProduct, 0);
+			L += make_float3(dotProduct * mesh->face_areas[i]) * get_emission(i);
 		}
 		
 		// Fr and dot product handled by Lambertian
-		L = intensity_sum/pow(dist, 2);
+		L /= pow(dist, 2);
 		
 		return true;
 	}
@@ -971,8 +973,8 @@
 		\hspace{0.05\linewidth}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
-				\includegraphics[width =\textwidth]{./Worksheet4/cornellblocks.png}\\
-				\textit{Rendering of the Cornell scene with area light (Not working yet)}
+				\includegraphics[width =\textwidth]{./Worksheet4/cornellblocks_render.png}\\
+				\textit{Rendering of the Cornell scene with area light}
 			\end{center}
 		\end{minipage}
 	\end{center}
@@ -1031,6 +1033,7 @@
 				hit.shading_normal = hit.geometric_normal;
 			}
 			
+			hit.position = r.origin + r.direction*dist;
 			hit.material = &(materials[mat_idx[prim_idx]]);
 		}
 		return intersects;
