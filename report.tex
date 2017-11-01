@@ -488,6 +488,28 @@
 	\end{minipage}
 	\end{center}
 
+	Implementation of the Lambertian in \textbf{Lambertian.cpp} :
+	\begin{lstlisting}
+	float3 Lambertian::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		float3 rho_d = get_diffuse(hit);
+		float3 result = make_float3(0.0f);
+		
+		for (int i = 0; i < lights.size(); i++) {
+			Light* light = lights[i];
+			float3 dir, Li;
+			if (light->sample(hit.position, dir, Li)) {
+				float cosine = dot(dir, hit.shading_normal)/(length(dir) + length(hit.shading_normal));
+				if (cosine > 0) {
+					result += cosine * Li;
+				}
+			}
+			
+		}
+		
+		return result*rho_d + Emission::shade(r, hit, emit);
+	}
+	\end{lstlisting}
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% 						                  	PART 2
@@ -1069,10 +1091,263 @@
 	
 	To use this structure in our program we have to modify the \textit{closest\_hit} and \textit{any\_hit} functions in the file \textbf{BspTree.cpp}:\\
 	
+	\begin{lstlisting}
+	bool BspTree::closest_hit(Ray& r, HitInfo& hit) const
+	{
+		closest_plane(r, hit);
+		// Test if intersects the biggest bounding box first
+		if (!intersect_min_max(r)) {
+			return false;
+		}
+		// Start at the root
+		BspNode root = *this->root;
+		return intersect_node(r, hit, root);
+	}
+	\end{lstlisting}
 	
-	\textit{Not finished yet}
+	\begin{lstlisting}
+	bool BspTree::any_hit(Ray& r, HitInfo& hit) const
+	{
+		any_plane(r, hit);
+		// Test if it intersects the biggest bounding box first
+		if (!intersect_min_max(r)) {
+			return false;
+		}
+		// Start at the root
+		BspNode root = *this->root;
+		return intersect_node(r, hit, root);
+	}
+	\end{lstlisting}
 	
+	To compare the renderings time and measure the speedup, the time of rendering was recorded 5 times and then averaged, this for the differentgeometries (except the Stanford Rabbit whose rendering time for the Naive Algorithm was too long):\\
+	
+	\begin{tabular}{|l|c|c|c|}
+		\hline
+		\textbf{Time (s)} & \textbf{Cornell Boxes} & \textbf{Teapot} & \textbf{Stanford Rabbit}\\ \hline \hline
+		Naive (Without BSP) & 2.553 & 236.77 &57m38s\\ \hline
+		& 2.587 & 232.01 &/\\ \hline
+		& 2.597 & 232.69 &/\\ \hline
+		& 2.537 & 293.93 &/\\ \hline
+		& 2.617 & 229.48 &/\\ \hline
+		\textit{Mean} & 2.578 & 244.98 &57m38s\\ \hline \hline
+		With BSP & 1.098 & 0.4903 & 1.554\\ \hline
+		& 1.064 & 0.5245 & 1.465\\ \hline
+		& 1.073 & 0.4903 & 1.454\\ \hline
+		& 1.086 & 0.4900 & 1.485\\ \hline
+		& 1.069 & 0.4878 & 1.454\\ \hline
+		\textit{Mean} & 1.078 & 0.4966 & 1.482\\ \hline \hline
+		\textbf{Speedup} & 2.40 & 493.3 &2333\\ \hline
+	\end{tabular}
+	\vspace{1em}
+	
+	Where $Speedup = \frac{Mean_{Naive}}{Mean_{BSP}}$.\\
+	
+	
+	We can clearly see the time speedup between the BSP-tree algorithm and the naive way. On reasonable geometries such as the \textit{Teapot}, the rendering time is almost divide by 500. On smaller geometries (\textit{Cornell Boxes}) the gain is obviously smaller as fewer triangles are present in the meshes. For the stanford rabbit, which contains near to 70\ 000 triangles, the rendering time using the naive intersection algorithm is astronomic and we can achieve a speedup of about 2300.
+	
+
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 						                  	PART 5
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Worksheet 5}
+	
+	\subsection{Part 1}
+	We have the following informations:
+	$$
+	\begin{cases}
+		P = 25W\\
+		\rho = 20\%\\
+		\lambda = 500nm
+	\end{cases}
+	$$
+	
+	As the light bulb has an efficiency of $\rho = 20\%$, the power emitted by this bulb is :
+	\begin{align*}
+	P_e &= \rho P\\
+	&= 0.2*25\\
+	&= 5W
+	\end{align*}
+	
+	We know the wavelength $\lambda$ emitted by this lamp, thus:
+	$$
+	f = \frac{c}{\lambda} = \frac{3*10^{8}}{500*10^{-9}} = 6*10^{14} s^{-1}$$
+	$$
+	q[500nm] = hf = 6.63*10^{-34} * 6*10^{14} s^{-1} \approx 4*10^{-19}
+	$$
+	
+	The, we can compute the approximate number of photons emitted per second :
+	$$
+	N_{photon}[5W] = \frac{5}{4*10^{-19}} = \boxed{1.25*10^{18}\ photons/s}
+	$$
+	
+	\subsection{Part 2}
+	We have :
+	$$
+	\begin{cases}
+		U = 2.4V\\
+		I = 0.7A\\
+		d = 1cm = 10^{-2}m
+	\end{cases}
+	$$
+	The \textit{Radiant Flux} correspond to the emitted power:
+	$$
+	\Phi = P = UI = 2.4*0.7 = \boxed{1.68W}
+	$$
+	
+	As the light bulb is approximatively sphere-shaped and emits light equally in all directions (isotropic) we have, for the \textit{Radiant Intensity}:
+	$$
+	I = \frac{\Phi}{4\pi} = \frac{1.68}{4*\pi} \approx \boxed{1.34*10^{-1} W/sr}
+	$$
+	We can then deduce the \textit{Radiant Exitance}:
+	$$
+	M = \frac{\Phi}{4\pi r^2} = \frac{1.68}{4*\pi*(\frac{10^{-2}}{2})^2} = \boxed{5.35*10^3 W/m^2}
+	$$
+	Finally, as $\Phi = \frac{dQ}{dt}$, we have for the \textit{Emitted Energy} during 5min:
+	$$
+	Q = \int_T \Phi dt = \Phi t = 1.68*5*60 = \boxed{504J}
+	$$
+	 
+	\subsection{Part 3}
+	Let $R = 1m$ the distance between the light bulb and the eye, $r = 3mm$ (as the pupil diameter is 6mm) the pupil opening.
+	
+	From the preceding exercise we know that, for this light bulb:
+	$$
+	I = 1.34*10^{-1} W/sr
+	$$
+	Then, we can compute the irradiance received by the eye with the formula:
+	$$
+	E = I\frac{\cos(\theta)}{r^2}
+	$$
+	As the eye is very small considered the distance to the light bulb, and looking directly at the light we have $\theta = 0$, then:
+	$$
+	E = I\frac{\cos(0)}{1^2} = \boxed{I = 1.34*10^{-1} W/m^2}
+	$$
+	
+%At this distance from the light, and as the pupil is very small, we can approximate its area as a disc area. As we have, for the solid angle $\Omega = \frac{A}{R^2}$ where A is the pupil area, then:
+%	$$
+%	\Omega = \frac{4\pi r^2}{R^2} = \frac{\pi*(3*10^{-3})^2}{1^2} \approx \boxed{2.83*10^{-5}}
+%	$$
+%	
+%	We have then:
+%	$$
+%	\Phi = \int_{\Omega} E.dA = E \int_{\Omega_{pupil}} dA = E.A_{pupil}
+%	$$
+%	And $\Phi = 1.68W$ from the preceding exercise, thus:
+%	$$
+%	E = \frac{\Phi}{A_{pupil}}= \frac{\Phi}{\pi r^2} = \frac{1.68}{\pi * (3*10^{-3})^2} = \boxed{5.94*10^4 W/m^2}
+%	$$
+	
+%	, and $\theta$ the angle as defined below:
+%	\begin{center}
+%		\includegraphics[width=10cm]{./Worksheet5/IMAG1865.jpg}
+%	\end{center}
+%	
+%	We thus have:
+%	$$
+%	\tan(\theta) = \frac{r}{d} = \frac{3*10^{-3}}{1} = 3*10^{-3}
+%	$$
+%	$$
+%	\theta = \arctan(3*10^{-3}) \approx 3*10^{-3} radian
+%	$$
+	
+	
+	
+	\subsection{Part 4}
+	From the problem, we have:
+	$$
+	\begin{cases}
+	P_u = 200W\\
+	\rho = 20\%\\
+	d = 2m\\
+	\lambda = 650nm
+	\end{cases}
+	$$	
+	
+	To calculate the \textit{Irradiance} at the point of the table right under the light (thus $\theta = 0$) bulb we use the same formula as in the precedent exercise:
+	\begin{align*}
+		E &= I\frac{cos(\theta)}{d^2}\\
+		&= I\frac{cos(0)}{d^2}\\
+		&= \frac{\Phi}{4\pi}\frac{1}{d^2}\\
+		&= \frac{P\rho}{4\pi}\frac{1}{d^2}\\
+		&= \frac{200*0.2}{4*\pi}\frac{1}{2^2}\\
+		&= \boxed{0.796\ W/m^2}
+	\end{align*}
+	
+	
+	As we have the following relation between photometric and radiometric measurements:
+	$$
+	Photometric = Radiometric * 685 * V(\lambda)
+	$$
+	Where $V(\lambda)$ is the luminous efficiency curve, with $V(650nm) = 0.1$. Using the \textit{Irradiance E} antecedently found we have:
+	$$
+	Illuminance = E * 685 * V(\lambda) = E*685*V(650) \approx 0.796*685*0.1 \approx \boxed{54.51\ Lux}
+	$$
+	
+	\subsection{Part 5}
+	Let $r_x$ (and respectively $r_s$) be the distance from the known source (resp the unknown) and the screen. At the matching position, bot light sources have the same irradiance on the screen (measured by a photometer). We know that the \textit{Radiant Flux} is defined by:
+	$$
+	\Phi = E \int_{\Omega}dA = E*4*\pi*r^2 \text{ (For a sphere with a radius } r \text{)}
+	$$
+	And:
+	$$
+	\Phi = 4*\pi*I
+	$$
+	
+	We thus have:
+	$$
+	E = \frac{\Phi}{4\pi r^2} = \frac{4\pi I}{4\pi r^2} = \frac{I}{r^2}
+	$$
+	
+	At the screen position defined by $r_x$ and $r_s$ we have $K(\lambda)E_x = K(\lambda)E_s$ as we use a photometer (sensibility to different wavelength), thus:
+	\begin{align*}
+	&\frac{I_s K(\lambda)}{r_s^2} = \frac{I_x K(\lambda)}{r_x^2}\\
+	&\iff \frac{I_s}{r_s^2} = \frac{I_x}{r_x^2}\\
+	&\iff I_x = I_s \frac{r_x^2}{r_s^2}\\
+	&\iff I_x = 40*\frac{65*10^{-2}}{35*10^{-2}} \approx \boxed{138\ cd}
+	\end{align*}
+	
+	\subsection{Part 6}
+%	$$
+%	M = \frac{d\Phi}{dA}
+%	$$
+%	$$
+%	L = \frac{d\Phi}{dA^\perp d\omega}
+%	$$
+	As we are considering a diffuse emitter, we know that:
+	$$
+	\Phi = LA\pi
+	$$
+	As $E = \frac{\Phi}{A}$, we have:
+	$$
+	E = \frac{LA\pi}{A} = L\pi = 5000*\pi \approx \boxed{15708\ W/m^2}
+	$$
+	
+	As $E = \frac{d\Phi}{dA}$, we can find the emitted energy using the area of this light:
+	$$
+	\Phi = E*A \approx 15708*0.1*0.1 \approx \boxed{157.08\ W}
+	$$
+	
+	\subsection{Part 7}
+	We have the following formulas for \textit{Radiant Excitance M} and \textit{Radiance L}:
+	$$
+	M = \frac{d\Phi}{dA}
+	$$
+	$$
+	L = \frac{d\Phi}{dA^\perp d\omega} = \frac{d\Phi}{dA \cos(\theta)d\omega}
+	$$
+	We thus have :
+	\begin{align*}
+		M &= \int_{2\pi} L\cos(\theta)d\omega
+		&= 
+	\end{align*}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 						                  	PART 6
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Worksheet 6}
+	The pixel subdivision level can be changed using the keys '+' and '-' to respectively increase and decrease the number of jitter samples per pixel in a simple ray tracing. Any modification imply a re-computation of the jitters using the function \textit{compute\_jitters}.
+	
+	This function stores in the \textit{jitter} array, for each subdivision of this pixel, the displacement from the pixel center to the randomly sub-pixel jitter computed. When the pixel subdivision level is set to $s$ we get $s^2$ sub-pixels for each pixel, as we subdivide our pixel using s portions in each dimension (height, width).
 	
 \end{document}
-
 % Fin du document LaTeX
