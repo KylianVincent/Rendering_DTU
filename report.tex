@@ -1347,7 +1347,106 @@
 	\section{Worksheet 6}
 	The pixel subdivision level can be changed using the keys '+' and '-' to respectively increase and decrease the number of jitter samples per pixel in a simple ray tracing. Any modification imply a re-computation of the jitters using the function \textit{compute\_jitters}.
 	
-	This function stores in the \textit{jitter} array, for each subdivision of this pixel, the displacement from the pixel center to the randomly sub-pixel jitter computed. When the pixel subdivision level is set to $s$ we get $s^2$ sub-pixels for each pixel, as we subdivide our pixel using s portions in each dimension (height, width).
+	This function stores in the \textit{jitter} array, for each subdivision of this pixel, the displacement from the pixel center to the randomly sub-pixel jitter computed. When the pixel subdivision level is set to $s$ we get $s^2$ sub-pixels for each pixel, as we subdivide our pixel using $s$ portions in each dimension (height, width).
+	
+	Casting a reay through each sub-pixel and averaging their values is done in the \textit{compute\_pixel} function in \textbf{RayCaster.cpp}:
+	
+	\begin{lstlisting}
+	float3 RayCaster::compute_pixel(unsigned int x, unsigned int y) const
+	{
+		int n_subpixels = pow(subdivs, 2);
+		float3 result = make_float3(0.0f);
+		float xip = x * win_to_ip.x + lower_left.x;
+		float yip = y * win_to_ip.y + lower_left.y;
+		
+		for (int i = 0; i < n_subpixels; i++) {
+			float2 displacement = jitter[i];
+			float2 coords = make_float2(xip + displacement.x, yip + displacement.y);
+			
+			Ray r = scene->get_camera()->get_ray(coords);
+			
+			HitInfo hit = HitInfo();
+			scene->closest_hit(r, hit);
+			
+			if (hit.has_hit) {
+				result += get_shader(hit)->shade(r, hit);
+				} else {
+				result += get_background();
+			}
+		}
+		return result/n_subpixels;
+	}
+	\end{lstlisting}
+	
+	Increasing the subdivision level $s$ leads to significant improvement in reduction of aliasing effect (the stairing effect on sharp edges become less visible as we increase $s$) but increase also proportionally the rendering time:
+	
+	\begin{center}
+	\begin{tabular}{|c|c|}
+		\hline
+		Subdivision level $s$ & Rendering time (s) (averaged on 3 realizations)\\ \hline
+		1 & 1.02\\ \hline
+		2 & 3.98\\ \hline
+		3 & 9.04\\ \hline
+		4 & 16.25\\ \hline
+		5 & 25.57\\ \hline
+		6 & 36.27\\ \hline
+	\end{tabular}
+	\end{center}
+	
+	From these results, we can see that the rendering time is proportional to the subdivision level squared ($R_{time} \propto s^2$). Indeed, for each pixel the ray-tracing is done $s^2$ times, this part being the more costly in rendering we increase the rendering time proportionally to the number of repetitions.
+	
+	For the original rendering image size, a pixel subdivision level of $s = 3$ gives already good results, without driving the rendering time too high. A pixel subdivision level greater than $s = 4$ is too costly regarding the increase of rendering time it involves. Below is the different renders for the Cornell box and blocks with stratified sampling for $s$ from 1 to 6:
+	
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/cornellblocks1.png}\\
+				\textit{s = 1}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/cornellblocks2.png}\\
+				\textit{s = 2}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/cornellblocks3.png}\\
+				\textit{s = 3}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/cornellblocks4.png}\\
+				\textit{s = 4}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/cornellblocks5.png}\\
+				\textit{s = 5}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/cornellblocks6.png}\\
+				\textit{s = 6}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	
 	
 \end{document}
 % Fin du document LaTeX

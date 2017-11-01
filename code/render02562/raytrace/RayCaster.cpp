@@ -14,8 +14,6 @@ using namespace optix;
 
 float3 RayCaster::compute_pixel(unsigned int x, unsigned int y) const
 {
-    float3 result = make_float3(0.0f);
-
     // Use the scene and its camera
     // to cast a ray that computes the color of the pixel at index (x, y).
     //
@@ -33,23 +31,28 @@ float3 RayCaster::compute_pixel(unsigned int x, unsigned int y) const
     //            intersected material after the ray has been traced.
     //        (b) Use get_background(...) if the ray does not hit anything.
 
-    float xip = x*win_to_ip.x + lower_left.x;
-    float yip = y*win_to_ip.y + lower_left.y;
-    float2 coords = make_float2(xip, yip);
+    int n_subpixels = pow(subdivs, 2);
+    float3 result = make_float3(0.0f);
+    float xip = x * win_to_ip.x + lower_left.x;
+    float yip = y * win_to_ip.y + lower_left.y;
 
-    Ray r = scene->get_camera()->get_ray(coords);
+    for (int i = 0; i < n_subpixels; i++) {
+        float2 displacement = jitter[i];
+        float2 coords = make_float2(xip + displacement.x, yip + displacement.y);
 
-    HitInfo hit = HitInfo();
-    scene->closest_hit(r, hit);
+        Ray r = scene->get_camera()->get_ray(coords);
 
-    if (hit.has_hit) {
-        result = get_shader(hit)->shade(r, hit);
-    } else {
-        result = get_background();
-    }
+        HitInfo hit = HitInfo();
+        scene->closest_hit(r, hit);
+
+        if (hit.has_hit) {
+            result += get_shader(hit)->shade(r, hit);
+        } else {
+            result += get_background();
+        }
 //    return (r.direction + 1)/2;
-
-    return result;
+    }
+    return result/n_subpixels;
 }
 
 float3 RayCaster::get_background(const float3& dir) const
