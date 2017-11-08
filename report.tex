@@ -1095,20 +1095,23 @@
 	bool BspTree::closest_hit(Ray& r, HitInfo& hit) const
 	{
 		closest_plane(r, hit);
-		// Test if intersects the biggest bounding box first
-		if (!intersect_min_max(r)) {
-			return false;
+		// Test with biggest bounding box first
+		if (intersect_min_max(r)) {
+			// Start at the root
+			BspNode root = *this->root;
+			intersect_node(r, hit, root);
 		}
-		// Start at the root
-		BspNode root = *this->root;
-		return intersect_node(r, hit, root);
+		return hit.has_hit;
 	}
 	\end{lstlisting}
 	
 	\begin{lstlisting}
 	bool BspTree::any_hit(Ray& r, HitInfo& hit) const
 	{
-		any_plane(r, hit);
+		if (any_plane(r, hit)){
+			return true;
+		}
+		    
 		// Test if it intersects the biggest bounding box first
 		if (!intersect_min_max(r)) {
 			return false;
@@ -1337,9 +1340,20 @@
 	$$
 	We thus have :
 	\begin{align*}
-		M &= \int_{2\pi} L\cos(\theta)d\omega
-		&= 
+		M &= \int_{2\pi} L\cos(\theta)d\omega\\
+		&= \int_{\phi = 0}^{2\pi}\int_{\theta = 0}^{\pi/2} L \cos(\theta) \sin(\theta) d\theta d\phi\\
+		&= \int_{\phi = 0}^{2\pi}\int_{\theta = 0}^{\pi/2} 6000 \cos^2(\theta) \sin(\theta) d\theta d\phi\\
+		&= 6000\left(\int_{\phi = 0}^{2\pi} d\phi\right)\left(\int_{\theta = 0}^{\pi/2}\cos^2(\theta) \sin(\theta) d\theta\right)\\
+		&= 6000*2\pi*\left[-\frac{\cos^3(\theta)}{3}\right]_{0}^{\pi/2} \quad \hspace{2em}\quad \textit{Because } \frac{d\cos(\theta)}{d\theta} = -\sin(\theta)\\
+		&= 6000*2\pi*[0 - \frac{-1}{3}]\\
+		&= 6000*2\pi*\frac{1}{3}\\
+		&\approx \boxed{12566\ W/m^2}
 	\end{align*}
+	
+	From this we can deduce the emitted power as in the precedent exercise:
+	$$
+	\Phi = M * A \approx 12566*0.1*0.1 \approx \boxed{125.66\ W}
+	$$
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% 						                  	PART 6
@@ -1446,7 +1460,166 @@
 		\end{minipage}
 	\end{center}
 	
+	\section{Worksheet 7}
+	Emitting photons from the point light is implemented in \textbf{PointLight.cpp}:
 	
+	\begin{lstlisting}
+	bool PointLight::emit(Ray& r, HitInfo& hit, float3& Phi) const
+	{		
+		// Sample ray direction and create ray
+		float x, y, z;
+		do {
+			x = mt_random() * 2 - 1; // Random value between -1 and 1
+			y = mt_random() * 2 - 1; // Random value between -1 and 1
+			z = mt_random() * 2 - 1; // Random value between -1 and 1
+		} while (pow(x, 2) + pow(y, 2) + pow(z, 2) > 1);
+		float3 dir = make_float3(x, y, z);
+		
+		// Trace ray
+		r = Ray(light_pos, dir, 0, 1e-4, RT_DEFAULT_MAX);
+		
+		// If a surface was hit, compute Phi and return true
+		if (tracer->trace_to_any(r, hit)) {
+			//Surface was hit
+			Phi = intensity*4*M_PIf;
+			return true;
+		}
+		
+		return false;
+	}
+	\end{lstlisting}
+	
+	We can then trace these photons to the first diffuse surface, considering a maximum amount of reflections/refractions to reach this surface. The photons which have been reflected or refracted at least once and then reached this surface are then stored in a \textit{caustic photon map}. This process is done in \textbf{ParticleTracer.cpp}:
+	\begin{lstlisting}
+	void ParticleTracer::trace_particle(const Light* light, const unsigned int caustics_done)
+	{
+		if(caustics_done)
+		return;
+		
+		// Shoot a particle from the sampled source
+		Ray r;
+		HitInfo hit;
+		float3 Phi;
+		if (!light->emit(r, hit, Phi)) {
+			// If no hit at all
+			return;
+		}
+		
+		// Forward from all specular surfaces
+		while(scene->is_specular(hit.material) && hit.trace_depth < 500)
+		{
+			switch(hit.material->illum)
+			{
+				case 3:  // mirror materials
+				{
+					// Forward from mirror surfaces
+					Ray r_out;
+					HitInfo hit_out;
+					if (!trace_reflected(r, hit, r_out, hit_out)) {
+						return;
+					}
+					r = r_out;
+					hit = hit_out;
+				}
+				break;
+				case 11: // absorbing volume
+				case 12: // absorbing glossy volume
+				{
+					// Handle absorption here (Worksheet 8)
+				}
+				case 2:  // glossy materials
+				case 4:  // transparent materials
+				{
+					// Forward from transparent surfaces
+					Ray r_out;
+					HitInfo hit_out;
+					
+					// Russian roulette to choose between reflection and refraction
+					float P;
+					trace_refracted(r, hit, r_out, hit_out, P);
+					if (mt_random() < P) {
+						hit_out.has_hit = false;
+						trace_reflected(r, hit, r_out, hit_out);
+					}
+					
+					if (!hit_out.has_hit) {
+						return;
+					}
+					
+					r = r_out;
+					hit = hit_out;
+				}
+				break;
+				default:
+				return;
+			}
+		}
+		
+		// Store in caustics map at first diffuse surface
+		if (hit.trace_depth > 0)
+		caustics.store(Phi, hit.position, -r.direction);
+	}
+	\end{lstlisting}
+	
+	We obtain the following photon distribution in the default scene:
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/causticphotons.png}\\
+				\textit{Photo distribution in default scene}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	Writing the associated shader allows to visualize the caustic effects, alone and superposed with other Lambertian illumination. As the shader returns a \textit{radiance} value and we \textit{caustic photon map} stores irradiance we have to transform it:
+	$$
+	\text{Irradiance : } E = \frac{d\Phi}{dA}
+	$$
+	$$
+	\text{Reflected light : } L_r = \int_{2*\pi} f_r L_i \cos{\theta} d\omega
+	$$
+	As we are considering diffuse materials, their BRDF is : $ f_r = \frac{\rho_d}{\pi}$, and as the irradiance estimate is $dE = L_i \cos{\theta} d\omega$ we have :
+	\begin{align*}
+	\hspace{10em} L_r &= \int_{2\pi} f_r dE\\
+	&\approx \frac{1}{n_{photons}} \sum_{photons} f_r \frac{\Delta \Phi_p}{\Delta_A}\\
+	&= f_r \frac{1}{n_{photons}} \sum_{photons} \frac{\Delta \Phi_p}{\Delta_A} \hspace{2em} \text{as the material is diffuse}
+	\end{align*}
+	\textbf{PhotonCaustics.cpp}
+	
+	\begin{lstlisting}
+	float3 PhotonCaustics::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		float3 brdf = rho_d*M_1_PIf;
+		float3 irradiance = tracer->caustics_irradiance(hit, max_dist, photons);
+		
+		return brdf*irradiance + Lambertian::shade(r, hit, emit);
+	}
+	\end{lstlisting}
+	
+	This leads to the following renderings on the default scene:
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/causticsrender.png}\\
+				\textit{Rendering with caustics only}\\
+				\vspace{1em}
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet6/causticsandillumination.png}\\
+				\textit{Rendering with caustics and other illumination}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	\section{Worksheet 8}
+	\subsection{Fresnel reflectance}
+	
+	\subsection{Absorption}
 	
 \end{document}
 % Fin du document LaTeX
