@@ -1409,6 +1409,8 @@
 	
 	From these results, we can see that the rendering time is proportional to the subdivision level squared ($R_{time} \propto s^2$). Indeed, for each pixel the ray-tracing is done $s^2$ times, this part being the more costly in rendering we increase the rendering time proportionally to the number of repetitions.
 	
+	TODO : MATHEMATICAL describe the (worst case) mathematical relationship between subdivision level and aliasing error\\
+	
 	For the original rendering image size, a pixel subdivision level of $s = 3$ gives already good results, without driving the rendering time too high. A pixel subdivision level greater than $s = 4$ is too costly regarding the increase of rendering time it involves. Below is the different renders for the Cornell box and blocks with stratified sampling for $s$ from 1 to 6:
 	
 	
@@ -1560,13 +1562,18 @@
 		caustics.store(Phi, hit.position, -r.direction);
 	}
 	\end{lstlisting}
-	
+	The render parameters are set as :
+	\begin{itemize}
+		\item Number of photons in map = 100 000
+		\item Number of photons in the radiance estimate for caustics = 200 000
+		\item Number of jitter samples = 1 per pixel
+	\end{itemize}
 	We obtain the following photon distribution in the default scene:
 	
 	\begin{center}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
-				\includegraphics[width = \textwidth]{./Worksheet6/causticphotons.png}\\
+				\includegraphics[width = \textwidth]{./Worksheet7/causticphotons.png}\\
 				\textit{Photo distribution in default scene}
 			\end{center}
 		\end{minipage}
@@ -1602,7 +1609,7 @@
 	\begin{center}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
-				\includegraphics[width = \textwidth]{./Worksheet6/causticsrender.png}\\
+				\includegraphics[width = \textwidth]{./Worksheet7/causticsrender.png}\\
 				\textit{Rendering with caustics only}\\
 				\vspace{1em}
 			\end{center}
@@ -1610,7 +1617,7 @@
 		\hspace{0.05\linewidth}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
-				\includegraphics[width = \textwidth]{./Worksheet6/causticsandillumination.png}\\
+				\includegraphics[width = \textwidth]{./Worksheet7/causticsandillumination.png}\\
 				\textit{Rendering with caustics and other illumination}
 			\end{center}
 		\end{minipage}
@@ -1618,8 +1625,384 @@
 	
 	\section{Worksheet 8}
 	\subsection{Fresnel reflectance}
+	After implementing the fresnel reflectance in \textbf{fresnel.h} allows the variation of the reflectance coefficient around the ball according to the angle of view and refractive indices:
+	\begin{lstlisting}
+	inline float fresnel_r_s(float cos_theta1, float cos_theta2, float ior1, float ior2)
+	{
+		// Compute the perpendicularly polarized component of the Fresnel reflectance
+		return (ior1*cos_theta1 - ior2*cos_theta2)/(ior1*cos_theta1 + ior2*cos_theta2);
+	}
+	
+	inline float fresnel_r_p(float cos_theta1, float cos_theta2, float ior1, float ior2)
+	{
+		// Compute the parallelly polarized component of the Fresnel reflectance
+		return (ior2*cos_theta1 - ior1*cos_theta2)/(ior2*cos_theta1 + ior1*cos_theta2);
+	}
+	
+	inline float fresnel_R(float cos_theta1, float cos_theta2, float ior1, float ior2)
+	{
+		// Compute the Fresnel reflectance using fresnel_r_s(...) and fresnel_r_p(...)
+		return (pow(fresnel_r_s(cos_theta1, cos_theta2, ior1, ior2), 2) + pow(fresnel_r_p(cos_theta1, cos_theta2, ior1, ior2), 2))/2;
+	}
+	\end{lstlisting}
+	
+	In \textbf{RayTracer.cpp} we have to be careful when computing the $R$ coefficient, indeed the incident ray direction is toward the surface (in the opposite direction of the surface normal) and the refracted ray direction must be compared with the inversed normal (normal inside the material):
+	\begin{lstlisting}
+		bool RayTracer::trace_refracted(const Ray& in, const HitInfo& in_hit, Ray& out, HitInfo& out_hit, float& R) const
+		{
+			float3 normal;
+			float cos_theta_in;
+			out_hit.ray_ior = get_ior_out(in, in_hit, out.direction, normal, cos_theta_in);
+			out_hit.trace_depth = in_hit.trace_depth + 1;
+			
+			bool is_refracted = optix::refract(out.direction, in.direction, normal, out_hit.ray_ior/in_hit.ray_ior);
+			if (!is_refracted) {
+				// Detect total internal reflection
+				R = 1;
+				return false;
+			}
+			
+			R = fresnel_R(dot(normal, -in.direction), dot(-normal, out.direction), in_hit.ray_ior, out_hit.ray_ior);
+			out.origin = in_hit.position;
+			out.ray_type = 0;
+			out.tmax = RT_DEFAULT_MAX;
+			out.tmin = 1.0e-4f;
+			
+			return trace_to_closest(out, out_hit);
+		}
+	\end{lstlisting}
+	
+	We can then compare the \textit{Transparent} shader depending if the reflectance $R$ is kept constant or computed using fresnel equations:
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet8/transparent_fresnel.png}\\
+				\textit{R computed using fresnel equations}\\
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet8/r01.png}\\
+				\textit{R = 0.1 (kept constant)}
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	The difference is very subtle but we can see a small blue highlight on top of the sphere. This is due to the great importance of reflection at this angle. We can also see a gradient effect in the upper blue part at the bottom of the sphere where we have both sky refraction and shadow reflection. In the adaptive $R$ case we can see the evolution of this coefficient with a more blurry limit between these two zones at the center of the sphere (more refraction due to smaller angle).\\
+	
+	
+	
+	The code in	\textbf{Glossy.cpp} and \textbf{ParticleTracer.cpp} was already supporting this implementation, using the returned $R$ parameter of \textit{trace\_refracted}:
+	\begin{lstlisting}
+	float3 Glossy::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		if(hit.trace_depth >= max_depth)
+		return make_float3(0.0f);
+		
+		float R;
+		Ray reflected, refracted;
+		HitInfo hit_reflected, hit_refracted;
+		tracer->trace_reflected(r, hit, reflected, hit_reflected);
+		tracer->trace_refracted(r, hit, refracted, hit_refracted, R);
+		
+		return R*shade_new_ray(reflected, hit_reflected) + (1.0f - R)*shade_new_ray(refracted, hit_refracted) + Phong::shade(r, hit, emit);
+	}
+	\end{lstlisting}
+	
+	\begin{lstlisting}
+	void ParticleTracer::trace_particle(const Light* light, const unsigned int caustics_done)
+	{
+		if(caustics_done)
+		return;
+		
+		// Shoot a particle from the sampled source
+		Ray r;
+		HitInfo hit;
+		float3 Phi;
+		if (!light->emit(r, hit, Phi)) {
+			// If no hit at all
+			return;
+		}
+		
+		// Forward from all specular surfaces
+		while(scene->is_specular(hit.material) && hit.trace_depth < 500)
+		{
+			switch(hit.material->illum)
+			{
+				case 3:  // mirror materials
+				{
+					// Forward from mirror surfaces here
+					Ray r_out;
+					HitInfo hit_out;
+					if (!trace_reflected(r, hit, r_out, hit_out)) {
+						return;
+					}
+					r = r_out;
+					hit = hit_out;
+				}
+				break;
+				case 11: // absorbing volume
+				case 12: // absorbing glossy volume
+				{
+					// Handle absorption here (Worksheet 8)
+				}
+				case 2:  // glossy materials
+				case 4:  // transparent materials
+				{
+					// Forward from transparent surfaces here
+					Ray r_out;
+					HitInfo hit_out;
+					
+					// Russian roulette to choose between reflection and refraction
+					float P;
+					trace_refracted(r, hit, r_out, hit_out, P);
+					if (mt_random() < P) {
+						hit_out.has_hit = false;
+						trace_reflected(r, hit, r_out, hit_out);
+					}
+					
+					if (!hit_out.has_hit) {
+						return;
+					}
+					
+					r = r_out;
+					hit = hit_out;
+				}
+				break;
+				default:
+				return;
+			}
+		}
+		
+		// Store in caustics map at first diffuse surface
+		// Hint: When storing, the convention is that the photon direction
+		//       should point back toward where the photon came from.
+		if (hit.trace_depth > 0)
+		caustics.store(Phi, hit.position, -r.direction);
+	}	
+	\end{lstlisting}
+	
+	We can then compare the renderings of the default scene between $R$ as kept constant and computed using the fresnel equations, but the difference is again very subtle (however we can see the caustic reflexion at the top of the sphere):
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet8/withcaustics.png}\\
+				\textit{Glossy shader with caustics (R computed using fresnel equations)}\\
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet7/causticsandillumination.png}\\
+				\textit{Glossy shader with caustics (R = 0.1, kept constant)}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	\begin{center}
+		\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet8/causticdots.png}\\
+				\textit{Caustics map as white dots}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	\end{center}
 	
 	\subsection{Absorption}
+	Implementation of absorption in transparent materials in \textbf{Volume.cpp}:
+	
+	\begin{lstlisting}
+	float3 Volume::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		// If inside the volume, Find the direct transmission through the volume by using
+		// the transmittance to modify the result from the Transparent shader.
+		// If inside the ray going out and the material normal (pointing outwards) are pointing in the same direction
+		// (same hemisphere)
+		if (dot(r.direction, hit.geometric_normal) > 0) {
+			return get_transmittance(hit) * Transparent::shade(r, hit, emit);
+		}
+		return Transparent::shade(r, hit, emit);
+	}
+	\end{lstlisting}
+	
+	\begin{lstlisting}
+	float3 Volume::get_transmittance(const HitInfo& hit) const
+	{
+		if(hit.material)
+		{
+			// Compute and return the transmittance using the diffuse reflectance of the material.
+			float3 rho_d = make_float3(hit.material->diffuse[0], hit.material->diffuse[1], hit.material->diffuse[2]);
+			float3 rho_d_corrected = make_float3(fmax(rho_d.x, 1e-5), fmax(rho_d.y, 1e-5), fmax(rho_d.z, 1e-5));
+			float3 absorption = 1/rho_d_corrected - 1;
+			return make_float3(exp(-absorption.x*hit.dist), exp(-absorption.y*hit.dist), exp(-absorption.z*hit.dist));
+		}
+		//No material, full transmission
+		return make_float3(1.0f);
+	}
+	\end{lstlisting}
+	
+	We then implement the glossy shader including absorption. To do this we use the Phong specular component (we exclude its diffusive component to use the glass absorption properties) along with the glossy shader computations. Finally we use the transmittance coefficient to scale the radiance if a material was traversed:
+	\textbf{GlossyVolume.cpp}:
+	
+	\begin{lstlisting}
+	float3 GlossyVolume::shade(const Ray& r, HitInfo& hit, bool emit) const
+	{
+		float3 rho_s = get_specular(hit);
+		float s = get_shininess(hit);
+		
+		float3 wi, wo, wr, Li;
+		float3 Lr = make_float3(0.0);
+		for (int i = 0; i < lights.size(); i++) {
+			Light *light = lights[i];
+			if (light->sample(hit.position, wi, Li)) {
+				// Not in shadows, we add this light participation
+				wr = normalize(reflect(-wi, hit.shading_normal));
+				wo = normalize(-r.direction);
+				
+				// Compute phong for this light
+				Li = make_float3(fmax(dot(wi, hit.shading_normal), 0));
+				
+				float dotproduct = dot(wo, wr);
+				dotproduct = fmax(dotproduct, 0);
+				
+				Li *= rho_s*(s + 2)*pow(dotproduct, s)*M_1_PIf/2;
+				Lr += Li;
+			}
+		}
+		
+		if(hit.trace_depth >= max_depth)
+		return make_float3(0.0f);
+		
+		float R;
+		Ray reflected, refracted;
+		HitInfo hit_reflected, hit_refracted;
+		tracer->trace_reflected(r, hit, reflected, hit_reflected);
+		tracer->trace_refracted(r, hit, refracted, hit_refracted, R);
+		
+		float3 res = R*shade_new_ray(reflected, hit_reflected) + (1.0f - R)*shade_new_ray(refracted, hit_refracted) + Lr;
+		
+		if (dot(r.direction, hit.geometric_normal) > 0) {
+			return get_transmittance(hit) * res;
+		}
+		
+		return res;
+	}
+	\end{lstlisting}
+	
+	The only missing part of our model is implementing this absorption for the caustics, this is done in \textbf{ParticleTracer.cpp}:
+	
+	\begin{lstlisting}
+	float3 ParticleTracer::get_transmittance(const HitInfo& hit) const
+	{
+		if(hit.material)
+		{
+			// Compute and return the transmittance using the diffuse reflectance of the material.
+			// Diffuse reflectance rho_d does not make sense for a specular material, so we can use
+			// this material property as an absorption coefficient. Since absorption has an effect
+			// opposite that of reflection, using 1/rho_d-1 makes it more intuitive for the user.
+			float3 rho_d = make_float3(hit.material->diffuse[0], hit.material->diffuse[1], hit.material->diffuse[2]);
+			float3 rho_d_corrected = make_float3(fmax(rho_d.x, 1e-5), fmax(rho_d.y, 1e-5), fmax(rho_d.z, 1e-5));
+			float3 absorption = 1/rho_d_corrected - 1;
+			return make_float3(exp(-absorption.x*hit.dist), exp(-absorption.y*hit.dist), exp(-absorption.z*hit.dist));
+		}
+		//No material, full transmission
+		return make_float3(1.0f);
+	}
+	\end{lstlisting}
+	
+	\begin{lstlisting}
+	void ParticleTracer::trace_particle(const Light* light, const unsigned int caustics_done)
+	{
+		if(caustics_done)
+		return;
+		
+		// Shoot a particle from the sampled source
+		Ray r;
+		HitInfo hit;
+		float3 Phi;
+		if (!light->emit(r, hit, Phi)) {
+			// If no hit at all
+			return;
+		}
+		
+		// Forward from all specular surfaces
+		while(scene->is_specular(hit.material) && hit.trace_depth < 500)
+		{
+			switch(hit.material->illum)
+			{
+				case 3:  // mirror materials
+				{
+					// Forward from mirror surfaces here
+					Ray r_out;
+					HitInfo hit_out;
+					if (!trace_reflected(r, hit, r_out, hit_out)) {
+						return;
+					}
+					r = r_out;
+					hit = hit_out;
+				}
+				break;
+				case 11: // absorbing volume
+				case 12: // absorbing glossy volume
+				{
+					Phi = Phi*get_transmittance(hit);
+				}
+				case 2:  // glossy materials
+				case 4:  // transparent materials
+				{
+					// Forward from transparent surfaces here
+					Ray r_out;
+					HitInfo hit_out;
+					
+					// Russian roulette to choose between reflection and refraction
+					float P;
+					trace_refracted(r, hit, r_out, hit_out, P);
+					if (mt_random() < P) {
+						hit_out.has_hit = false;
+						trace_reflected(r, hit, r_out, hit_out);
+					}
+					
+					if (!hit_out.has_hit) {
+						return;
+					}
+					
+					r = r_out;
+					hit = hit_out;
+				}
+				break;
+				default:
+				return;
+			}
+		}
+		if (hit.trace_depth > 0)
+		caustics.store(Phi, hit.position, -r.direction);
+	}
+	\end{lstlisting}
+	
+	We can visualize the results, using different transmission parameters for $K_d(r, g, b)$. All the images below had gamma increased once to show bigger contrasts:
+	
+	\begin{center}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet8/pinkball.png}\\
+				\textit{Purple couloured glass sphere\\Kd = 0.9, 0.1, 0.5}\\
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.40\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet8/redball.png}\\
+				\textit{Red couloured glass sphere\\Kd = 0.9, 0.1, 0.1}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	
 	
 \end{document}
 % Fin du document LaTeX
