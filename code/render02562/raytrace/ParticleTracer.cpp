@@ -116,7 +116,10 @@ void ParticleTracer::trace_particle(const Light* light, const unsigned int caust
             case 11: // absorbing volume
             case 12: // absorbing glossy volume
             {
-                Phi = Phi*get_transmittance(hit);
+                // If went through a volume (same direction as material normal)
+                if (dot(r.direction, hit.geometric_normal) > 0) {
+                    Phi = Phi*get_transmittance(hit);
+                }
             }
             case 2:  // glossy materials
             case 4:  // transparent materials

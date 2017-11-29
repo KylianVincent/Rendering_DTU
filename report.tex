@@ -1662,7 +1662,7 @@
 				return false;
 			}
 			
-			R = fresnel_R(dot(normal, -in.direction), dot(-normal, out.direction), in_hit.ray_ior, out_hit.ray_ior);
+			R = fresnel_R(cos_theta_in, dot(-normal, out.direction), in_hit.ray_ior, out_hit.ray_ior);
 			out.origin = in_hit.position;
 			out.ray_type = 0;
 			out.tmax = RT_DEFAULT_MAX;
@@ -1802,7 +1802,6 @@
 		\end{minipage}
 	\end{center}
 	
-	\begin{center}
 		\begin{center}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
@@ -1810,7 +1809,6 @@
 				\textit{Caustics map as white dots}\\
 			\end{center}
 		\end{minipage}
-	\end{center}
 	\end{center}
 	
 	\subsection{Absorption}
@@ -1950,7 +1948,10 @@
 				case 11: // absorbing volume
 				case 12: // absorbing glossy volume
 				{
-					Phi = Phi*get_transmittance(hit);
+					// If went through a volume (same direction as material normal)
+					if (dot(r.direction, hit.geometric_normal) > 0) {
+						Phi = Phi*get_transmittance(hit);
+					}
 				}
 				case 2:  // glossy materials
 				case 4:  // transparent materials
@@ -1989,19 +1990,83 @@
 	\begin{center}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
-				\includegraphics[width = \textwidth]{./Worksheet8/pinkball.png}\\
+				\includegraphics[width = \textwidth]{./Worksheet8/pinkball_c.png}\\
 				\textit{Purple couloured glass sphere\\Kd = 0.9, 0.1, 0.5}\\
 			\end{center}
 		\end{minipage}
 		\hspace{0.05\linewidth}
 		\begin{minipage}[b]{0.40\linewidth}
 			\begin{center}
-				\includegraphics[width = \textwidth]{./Worksheet8/redball.png}\\
+				\includegraphics[width = \textwidth]{./Worksheet8/redball_c.png}\\
 				\textit{Red couloured glass sphere\\Kd = 0.9, 0.1, 0.1}\\
 			\end{center}
 		\end{minipage}
 	\end{center}
 	
+	\section{Worksheet 9}
+	Using the RenderMan application for Maya we are able to render the \textit{CornellBox} and \textit{CornellBlocks} scene with a professional rendering tool. After setting the view angle, the light source and the different materials we obtain the following image as a first rendering result:
+	\begin{center}
+		\begin{minipage}[b]{0.4\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet9/cornellBoxGlobalIllumC.png}\\
+				\textit{First rendering result}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	To get the conventional path tracing with full global illumination result we need to modify the rendering parameters:
+	\begin{itemize}
+		\item Increase the number of the \textit{"Number of samples" (=460)} allows a better rendering by increasing the number of ray cast per pixel.
+		\item The \textit{"Max Path Length"} is set to a greater value (200) in order to increase the depth attained with our rays, implying a better light spreading
+		\item In order for the previous setting to be plenty in action, we need to modify the termination by the \textit{Russian Roulette} algorithm modifying \textit{"Roulette Depth" = 0} (to use this setting from the first depth) and \textit{"Roulette Threshold" = 1.0} (no termination).
+		\item We need to increase the default ray depth for diffuse components by setting \textit{"Max Diffuse Depth" = 100}, there's no need to increase this setting for the specular component as we don't have any in the scene yet.
+	\end{itemize}
+	The corresponding rendering is much longer due to the greater number of rays and deepest path length, but as the software rendering algorithm is iterative we can see the improvements happening in real time in the render image. At the end we have the following rendered scene:
+	
+	\begin{center}
+		\begin{minipage}[b]{0.4\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet9/conventionalPathTracingRenderC.png}\\
+				\textit{Conventional path tracing with full global illumination}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	The image is brighter than the firstly rendered one and we can clearly see the greater light diffusion in the scene. The scene is different from the one we were able to render using our framework, indeed in this RenderMan rendering we have two more aspects:
+	\begin{itemize}
+		\item As said before, this rendering takes into account the diffuse contribution from the environnent diffuse surfaces in the scene. We can see some blocks faces illuminated with red and green light. Furthermore the blocks faces not facing the are light get illuminated with these contributions.
+		\item On this rendering we also have soft shadows (where our framework only rendered hard shadows) caused by the area light.
+	\end{itemize}
+	
+	The \textit{Denoise Filtering} method of RenderMan enables the removing of the last speckles of noise (we can see a smoother image with less flickering) and we finally have:
+	\begin{center}
+		\begin{minipage}[b]{0.4\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet9/beforeDenoising.png}\\
+				\textit{Original rendering}\\
+			\end{center}
+		\end{minipage}
+		\hspace{0.05\linewidth}
+		\begin{minipage}[b]{0.4\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet9/afterDenoising.png}\\
+				\textit{Rendering after denoising method}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	
+	In order to add some specular components in our scene, we exchange the left block with a chrome ball, and the right with a glass ball. The settings are the same as in the last example except for one, indeed this time we need to increase the \textit{"Max Specular Depth" (= 100)} as well as we have now specular components.
+	
+	The obtained rendered image is then:
+	\begin{center}
+		\begin{minipage}[b]{0.4\linewidth}
+			\begin{center}
+				\includegraphics[width = \textwidth]{./Worksheet9/cornellBallsC.png}\\
+				\textit{Cornell scene rendering with glass and mirror ball}\\
+			\end{center}
+		\end{minipage}
+	\end{center}
+	\textit{Rem: It seems that the caustics didn't worked on the floor, I'm almost sure I had allowed them during the rendering session and I think we can see one on the green wall, I'll try another time this week}
 	
 	
 \end{document}

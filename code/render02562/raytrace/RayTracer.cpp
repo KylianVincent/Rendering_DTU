@@ -101,7 +101,7 @@ bool RayTracer::trace_refracted(const Ray& in, const HitInfo& in_hit, Ray& out, 
         return false;
     }
 
-    R = fresnel_R(dot(normal, -in.direction), dot(-normal, out.direction), in_hit.ray_ior, out_hit.ray_ior);
+    R = fresnel_R(cos_theta_in, dot(-normal, out.direction), in_hit.ray_ior, out_hit.ray_ior);
     //printf("Values : %f - %f - %f - %f\n", length(in_hit.geometric_normal), length(in.direction), length(-in_hit.geometric_normal), length(out.direction));
     //printf("Values : %f / %f / %f /%f\n", dot(normal, in.direction), dot(normal, out.direction), in_hit.ray_ior, out_hit.ray_ior);
     //printf("R : %f\n", R);
