@@ -108,9 +108,9 @@ float4 Texture::sample_linear(const float3& texcoord) const
     // We need a modulo when taking the U+1 or V+1 coordinate to make sure
     // we're not going outside the texture image
     i_a = fdata[U + V*width];
-    i_b = fdata[(U+1)%height + V*width];
-    i_c = fdata[U + ((V+1)%width)*width];
-    i_d = fdata[(U+1)%height + ((V+1)%width)*width];
+    i_b = fdata[(U+1)%width + V*width];
+    i_c = fdata[U + ((V+1)%height)*width];
+    i_d = fdata[(U+1)%width + ((V+1)%height)*width];
 
     return bilerp(i_a, i_b, i_c, i_d, a - U, b - V);
     //return sample_nearest(texcoord);
